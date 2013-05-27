@@ -64,11 +64,22 @@ exports.isExistedFile = function(p){
 
 /**
  * mix properties from src to target
- * multiple src could be passed
+ * multiple src be allowed
  * e.g. var target = mix(target, src1, src2, src3)
  */
 exports.mix = function(target, src, overwrite) {
     target = target || {}
+   /*
+    * NOTE
+    *
+    * can't modify overwrite directly!!!
+    *
+    * if you specify a new value to overwrite
+    * when method in the same file call mix()
+    * arguments is not modified
+    * but if one method out of this file call it
+    * arguments will be modified
+    */
     var ow
     var len = arguments.length
     var srcEnd = len - 1
