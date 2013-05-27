@@ -110,4 +110,4 @@ exports.getExternalIpAddress = function() {
     }
 }
 
-
+exports.logger = require('./logger')
