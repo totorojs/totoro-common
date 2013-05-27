@@ -1,0 +1,28 @@
+{
+    "name": "totoro-common",
+    "version": "0.1.0",
+    "description": "Common methods of totoro.",
+    "homepage": "https://github.com/totorojs/totoro-common",
+    "keywords": [
+        "totoro",
+        "common",
+    ],
+    "author": "fool2fish <fool2fish@gmail.com>",
+    "contributors": [
+        "kangpangpang <kangpangpang@gmail.com>"
+    ],
+    "engines": {
+        "node": ">= 0.8.17"
+    },
+    "dependencies": {
+        
+    },
+    "devDependencies": {
+        "grunt": "~0.4.1",
+        "grunt-contrib-jshint": "~0.3.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:totorojs/totoro-common.git"
+    }
+}
