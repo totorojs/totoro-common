@@ -69,21 +69,22 @@ exports.isExistedFile = function(p){
  */
 exports.mix = function(target, src, overwrite) {
     target = target || {}
+    var ow
     var len = arguments.length
     var srcEnd = len - 1
     var lastArg = arguments[len - 1]
 
     if ( typeof lastArg === 'boolean' || typeof lastArg === 'number') {
-        overwrite = lastArg
+        ow = lastArg
         srcEnd--
     } else {
-        overwrite = false
+        ow = false
     }
 
     for (var i = 1; i <= srcEnd; i++) {
         var current = arguments[i] || {}
         for (var j in current) {
-            if (overwrite || typeof target[j] === 'undefined') {
+            if (ow || typeof target[j] === 'undefined') {
                 target[j] = current[j]
             }
         }
