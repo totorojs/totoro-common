@@ -1,6 +1,8 @@
 var path = require('path')
 var fs = require('fs')
 
+var logger = require('./logger')
+
 exports.home = process.platform === 'win32' ? process.env.USERPROFILE : process.env.HOME
 
 exports.split = function(str) {
@@ -38,7 +40,7 @@ exports.readCfgFile = function(p) {
     try {
         return require(path.resolve(p))
     } catch(e) {
-
+        logger.debug('fail to read config file: ' + p)
     }
 }
 

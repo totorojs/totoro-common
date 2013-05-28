@@ -111,6 +111,8 @@ var logger = tracer.colorConsole({
         }
     }
 })
-logger.push2File = !/totoro$/.test(process.argv[1])
+console.info('---------->', logger.push2File)
+logger.push2File = /totoro$/.test(process.argv[1])
+console.info('---------->', logger.push2File)
 
 module.exports = logger
