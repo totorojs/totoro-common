@@ -74,7 +74,7 @@ exports.mix = function(target, src, overwrite) {
     *
     * can't modify overwrite directly!!!
     *
-    * if you specify a new value to overwrite
+    * if you assign a new value to overwrite
     * when method in the same file call mix()
     * arguments is not modified
     * but if one method out of this file call it
