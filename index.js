@@ -60,6 +60,12 @@ exports.isKeyword = function(p) {
 
 
 exports.isExistedFile = function(p){
+    //  if path contains query string
+    var reg = /\?|#/
+    if (reg.test(p)) {
+        p = p.split(reg)[0]
+    }
+
     return p && fs.existsSync(p) && fs.statSync(p).isFile()
 }
 
