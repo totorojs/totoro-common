@@ -91,8 +91,11 @@ var logger = tracer.colorConsole({
             }
             data.stacklist = callstack
         }
-
         data.title = data.title.toUpperCase()
+
+        if (logger.push2File) {
+            _push2File(dateFormat(new Date(), 'yyyy-mm-dd hh:MM:ss  ') + data.message, data.title)
+        }
     },
     filters: [{
         trace : colors.magenta,
@@ -102,9 +105,6 @@ var logger = tracer.colorConsole({
     }],
     transport: function(data) {
         console.log(data.output)
-        if (logger.push2File) {
-            _push2File(dateFormat(new Date(), 'yyyy-mm-dd hh:MM:ss  ') + data.output, data.title)
-        }
 
         if (data.title === 'ERROR') {
             process.exit(0)
