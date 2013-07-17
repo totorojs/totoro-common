@@ -123,7 +123,7 @@ function getMsg(title, data) {
 
 function getPrefix(title, data) {
     var msg = padding(title, 5) + ' ' + dateFormat(new Date(), 'yyyy-mm-dd hh:MM:ss') +
-        ' ' + padding(data.file, 12, true) + ':' + padding(data.line, 4)
+        ' ' + padding(data.file, 12, true) + ':' + padding(data.line, 3)
     return padding(msg, 38)
 }
 
