@@ -81,7 +81,7 @@ if (debug) {
 var logger = tracer.colorConsole({
     level: 'log',
     format: [
-        '[{{title}}] {{message}} (in {{file}}:{{line}})', //default format
+        '<{{title}}> {{message}} (in {{file}}:{{line}})', //default format
         {
             error : errorFormat
         }
@@ -93,6 +93,7 @@ var logger = tracer.colorConsole({
                 callstack += '\n' + data.stack[i]
             }
             data.stacklist = callstack
+            data.title = data.title.toUpperCase()
         }
     },
     filters: [{
@@ -103,7 +104,6 @@ var logger = tracer.colorConsole({
     }],
     transport: function(data) {
         var title = data.title.toUpperCase()
-
         if (levels.indexOf(title) >= levels.indexOf(level)) {
             console.log(data.output)
         }
