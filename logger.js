@@ -81,7 +81,7 @@ if (debug) {
 var logger = tracer.colorConsole({
     level: 'log',
     format: [
-        '<{{title}}> {{message}} (in {{file}}:{{line}})', //default format
+        '{{title}} {{file}}:{{line}} | {{message}}', //default format
         {
             error : errorFormat
         }
