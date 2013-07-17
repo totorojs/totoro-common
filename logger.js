@@ -130,15 +130,19 @@ function getMsg(title, data) {
 
 function getPrefix(title, data) {
     var msg = padding(title, 5) + ' ' + dateFormat(new Date(), 'yyyy-mm-dd hh:MM:ss') +
-        ' ' + data.file + ':' + data.line
-    return padding(msg, 40)
+        ' ' + padding(data.file, 12, true) + ':' + padding(data.line, 4)
+    return padding(msg, 38)
 }
 
-function padding(msg, num) {
+function padding(msg, num, isRight) {
     msg = msg.split('')
 
     for (var i = msg.length, len = num; i < len; i++) {
-        msg.push(' ')
+        if (isRight) {
+            msg.unshift(' ')
+        } else {
+            msg.push(' ')
+        }
     }
     return msg.join('')
 }
