@@ -15,25 +15,26 @@ var debug = process.argv.some(function(arg) {
     return arg === '--verbose'
 })
 
-var level = 'info'
+var levels = ['LOG', 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR']
+var level = 'INFO'
 
 if (debug) {
-    level = 'debug'
+    level = 'DEBUG'
 }
 
 var conf = {
     root : 'logs',
-    logPathFormat : '{{root}}/{{prefix}}.{{date}}.log'
+    logPathFormat : '{{root}}/{{date}}.log'
 }
 
-function LogFile(prefix, date) {
-
+function LogFile(date) {
     this.date = date;
-    this.prefix = prefix;
-    this.path = _.template(conf.logPathFormat, {root:conf.root, prefix:prefix, date:date})
+    this.path = _.template(conf.logPathFormat, {root:conf.root, date:date})
+
     if (!fs.existsSync(path.dirname(this.path))) {
         fs.mkdirSync(path.dirname(this.path))
     }
+
     this.stream = fs.createWriteStream(this.path, {
         flags: 'a',
         encoding: 'utf8'
@@ -52,16 +53,18 @@ LogFile.prototype.destroy = function() {
     }
 }
 
-var _logMap = {}
+var logFile
 
-function _push2File(str, title) {
-    var logFile = _logMap[title], now = dateFormat(new Date(), 'yyyy.W')
+function _push2File(str) {
+    var now = dateFormat(new Date(), 'yyyymmdd')
+
     if (logFile && logFile.date !== now) {
         logFile.destroy()
         logFile = null
     }
+
     if (!logFile) {
-        logFile = _logMap[title] = new LogFile(title, now)
+        logFile = new LogFile(now)
     }
 
     logFile.write(str)
@@ -76,9 +79,9 @@ if (debug) {
 
 
 var logger = tracer.colorConsole({
-    level: level,
+    level: 'log',
     format: [
-        '{{message}} (in {{file}}:{{line}})', //default format
+        '{{file}} {{message}} (in {{file}}:{{line}})', //default format
         {
             error : errorFormat
         }
@@ -91,11 +94,6 @@ var logger = tracer.colorConsole({
             }
             data.stacklist = callstack
         }
-        data.title = data.title.toUpperCase()
-
-        if (logger.push2File) {
-            _push2File(dateFormat(new Date(), 'yyyy-mm-dd hh:MM:ss  ') + data.message, data.title)
-        }
     },
     filters: [{
         trace : colors.magenta,
@@ -104,13 +102,47 @@ var logger = tracer.colorConsole({
         error : [colors.red]
     }],
     transport: function(data) {
-        console.log(data.output)
+        var title = data.title.toUpperCase()
 
-        if (data.title === 'ERROR') {
+        if (levels.indexOf(title) >= levels.indexOf(level)) {
+            console.log(data.output)
+        }
+
+        if (logger.push2File) {
+            _push2File(getMsg(title, data))
+        }
+
+        if (title === 'ERROR') {
             process.exit(0)
         }
     }
 })
+
+function getMsg(title, data) {
+    var msg = getPrefix(title, data) +  ' | '
+
+    if (title !== 'ERROR') {
+        return msg + data.message
+    } else {
+        return msg + '[' + data.stack.split('\n').join(',') + ']'
+    }
+}
+
+function getPrefix(title, data) {
+    var msg = padding(title, 5) + ' ' + dateFormat(new Date(), 'yyyy-mm-dd hh:MM:ss') +
+        ' ' + data.file + ':' + data.line
+    return padding(msg, 40)
+}
+
+function padding(msg, num) {
+    msg = msg.split('')
+
+    for (var i = msg.length, len = num; i < len; i++) {
+        msg.push(' ')
+    }
+    return msg.join('')
+}
+
 logger.push2File = !/totoro$/.test(process.argv[1])
 
 module.exports = logger
