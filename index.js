@@ -40,7 +40,7 @@ exports.readCfgFile = function(p) {
     try {
         return require(path.resolve(p))
     } catch(e) {
-        logger.debug('fail to read config file: ' + p)
+        logger.debug('Fail to read config file: ' + p)
     }
 }
 
