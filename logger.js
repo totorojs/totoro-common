@@ -3,33 +3,87 @@
 var fs = require('fs')
 var path = require('path')
 var tracer = require('tracer')
-var colors = require('colors')
+var colorful = require('colorful')
 var dateFormat = require('dateformat')
-var _ = require('underscore')
 
-_.templateSettings = {
-    interpolate : /\{\{(.+?)\}\}/g
-}
+var levels = ['debug', 'info', 'warn', 'error', 'fatal']
+var level = process.argv.some(function(arg) {
+        return arg === '--verbose'
+    }) ? 'debug' : 'warn'
 
-var debug = process.argv.some(function(arg) {
-    return arg === '--verbose'
+var templ = '{{title}} {{file}}:{{line}} | {{message}}'
+
+var colors = {
+        info: colorful.green,
+        warn: colorful.yellow,
+        error: colorful.red,
+        fatal: colorful.red
+    }
+
+
+module.exports = tracer.colorConsole({
+    methods: levels,
+    level: level,
+
+    format: [
+        templ,
+        {
+            fatal: templ + '\nCall Stack:\n{{stacklist}}'
+        }
+    ],
+    dateformat: "yyyy-mm-dd hh:MM:ss",
+
+    preprocess: function(data) {
+        if (data.title === 'fatal') {
+            data.stacklist = data.stack.join('\n')
+        }
+    },
+
+    filters: [
+        {
+            info: colorful.green,
+            warn: colorful.yellow,
+            error: colorful.red,
+            fatal: [colorful.red, colorful.bold]
+        }
+    ],
+
+    transport: function(data) {
+        var title =data.title
+        if (levels.indexOf(title) >= levels.indexOf(level)) {
+            console.log(data.output)
+        }
+
+        push2File(generateLog(data))
+
+        if (title === 'fatal') {
+            process.exit(0)
+        }
+    }
 })
 
-var levels = ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL']
-var level = 'INFO'
 
-if (debug) {
-    level = 'DEBUG'
+var logFile
+
+function push2File(str) {
+    var now = dateFormat(new Date(), 'yyyymmdd')
+
+    if (logFile && logFile.date !== now) {
+        logFile.destroy()
+        logFile = null
+    }
+
+    if (!logFile) {
+        logFile = new LogFile(now)
+    }
+
+    logFile.write(str)
 }
 
-var conf = {
-    root : 'logs',
-    logPathFormat : '{{root}}/{{date}}.log'
-}
 
 function LogFile(date) {
     this.date = date;
-    this.path = _.template(conf.logPathFormat, {root:conf.root, date:date})
+    this.path = path.join('logs', date + '.log')
 
     if (!fs.existsSync(path.dirname(this.path))) {
         fs.mkdirSync(path.dirname(this.path))
@@ -53,85 +107,31 @@ LogFile.prototype.destroy = function() {
     }
 }
 
-var logFile
 
-function _push2File(str) {
-    var now = dateFormat(new Date(), 'yyyymmdd')
+function generateLog(data) {
+    var title = data.title
+    var msg = prefix(data) +  ' | ' + data.message
 
-    if (logFile && logFile.date !== now) {
-        logFile.destroy()
-        logFile = null
+    if (title === 'fatal') {
+        msg = msg + '[' + data.stacklist.split('\n').join(', ') + ']'
     }
 
-    if (!logFile) {
-        logFile = new LogFile(now)
-    }
-
-    logFile.write(str)
+    return msg
 }
 
 
-var logger = tracer.colorConsole({
-    methods : ['debug', 'info', 'warn', 'error', 'fatal'],
-    level: 'debug',
-    format: [
-        '{{title}} {{file}}:{{line}} | {{message}}', //default format
-        {
-            fatal: '{{message}} (in {{file}}:{{line}})\nCall Stack:{{stacklist}}'
-        }
-    ],
-    preprocess: function(data) {
-        if (data.title === 'fatal') {
-            var callstack = '', len = data.stack.length
-            for (var i = 0; i < len; i++) {
-                callstack += '\n' + data.stack[i]
-            }
-            data.stacklist = callstack
-            data.title = data.title.toUpperCase()
-        }
-    },
-    filters: [{
-        info : colors.green,
-        warn : colors.yellow,
-        error : [colors.red]
-    }],
-    transport: function(data) {
-        var title = data.title.toUpperCase()
-        if (levels.indexOf(title) >= levels.indexOf(level)) {
-            console.log(data.output)
-        }
-
-        if (logger.push2File) {
-            _push2File(getMsg(title, data))
-        }
-
-        if (title === 'FATAL') {
-            process.exit(0)
-        }
-    }
-})
-
-function getMsg(title, data) {
-    var msg = getPrefix(title, data) +  ' | '
-
-    if (title !== 'FATAL') {
-        return msg + data.message
-    } else {
-        return msg + '[' + data.stacklist.split('\n').join(',') + ']'
-    }
-}
-
-function getPrefix(title, data) {
-    var msg = padding(title, 5) + ' ' + dateFormat(new Date(), 'yyyy-mm-dd hh:MM:ss') +
+function prefix(data) {
+    var title = data.title
+    return  padding(title, 5) + ' ' + data.timestamp +
         ' ' + padding(data.file, 12, true) + ':' + padding(data.line, 3)
-    return padding(msg, 38)
 }
 
-function padding(msg, num, isRight) {
+
+function padding(msg, width, alignRight) {
     msg = msg.split('')
 
-    for (var i = msg.length, len = num; i < len; i++) {
-        if (isRight) {
+    for (var i = msg.length; i < width; i++) {
+        if (alignRight) {
             msg.unshift(' ')
         } else {
             msg.push(' ')
@@ -140,6 +140,3 @@ function padding(msg, num, isRight) {
     return msg.join('')
 }
 
-logger.push2File = !/totoro$/.test(process.argv[1])
-
-module.exports = logger
