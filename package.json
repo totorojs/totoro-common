@@ -18,7 +18,7 @@
         "underscore": "1.4.4",
         "tracer": "0.5.1",
         "colorful": "2.1.0",
-        "dateformat": "1.2.3"
+        "dateformat": "*"
     },
     "devDependencies": {},
     "repository": {
