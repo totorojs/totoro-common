@@ -5,11 +5,9 @@ var path = require('path')
 var tracer = require('tracer')
 var colorful = require('colorful')
 var dateFormat = require('dateformat')
+// Retrieve
 
 var levels = ['debug', 'info', 'warn', 'error', 'fatal']
-var level = process.argv.some(function(arg) {
-        return arg === '--verbose'
-    }) ? 'debug' : 'warn'
 
 var templ = '{{title}} {{file}}:{{line}} | {{message}}'
 
@@ -21,47 +19,103 @@ var colors = {
     }
 
 
-module.exports = tracer.colorConsole({
-    methods: levels,
-    level: level,
 
-    format: [
-        templ,
-        {
-            fatal: templ + '\nCall Stack:\n{{stacklist}}'
+exports.getLog = function(cfg) {
+    var transports = [exports.getConsole()]
+
+    if (cfg && cfg.transports) {
+        transports = transports.concat(cfg.transports)
+    }
+
+    return tracer.colorConsole({
+        methods: levels,
+
+        level: 'debug',
+
+        format: [
+            templ,
+            {
+                fatal: templ + '\nCall Stack:\n{{stacklist}}'
+            }
+        ],
+
+        dateformat: "yyyy-mm-dd hh:MM:ss",
+
+        preprocess: function(data) {
+            if (data.title === 'fatal') {
+                data.stacklist = data.stack.join('\n')
+            }
+        },
+
+        filters: [
+            {
+                info: colorful.green,
+                warn: colorful.yellow,
+                error: colorful.red,
+                fatal: [colorful.red, colorful.bold]
+            }
+        ],
+
+        transport: function(data) {
+            transports.forEach(function(t) {
+                t._transport(data)
+            })
+
+            if (data.title === 'fatal') {
+                process.exit(0)
+            }
         }
-    ],
-    dateformat: "yyyy-mm-dd hh:MM:ss",
+    })
+}
 
-    preprocess: function(data) {
-        if (data.title === 'fatal') {
-            data.stacklist = data.stack.join('\n')
+
+exports.Transport = Transport
+
+
+function Transport(cfg) {
+    this.cfg = cfg
+    this.level = (cfg && cfg.getLevel && cfg.getLevel()) || this.getLevel()
+}
+
+Transport.prototype = {
+    _transport: function(data) {
+        var title =data.title
+        if (levels.indexOf(title) >= levels.indexOf(this.level || this.getLevel())) {
+            this.transport(data)
         }
     },
-
-    filters: [
-        {
-            info: colorful.green,
-            warn: colorful.yellow,
-            error: colorful.red,
-            fatal: [colorful.red, colorful.bold]
-        }
-    ],
-
     transport: function(data) {
-        var title =data.title
-        if (levels.indexOf(title) >= levels.indexOf(level)) {
-            console.log(data.output)
-        }
-
-        push2File(generateLog(data))
-
-        if (title === 'fatal') {
-            process.exit(0)
-        }
+        console.info('222')
+    },
+    getLevel: function() {
+        return 'debug'
     }
-})
+}
 
+exports.getConsole = function(cfg) {
+    cfg = cfg || {}
+    cfg.getLevel = cfg.getLevel || function() {
+        return this.level = (process.argv.some(function(arg) {
+            return arg === '--verbose'
+        }) ? 'debug' : 'warn')
+    }
+
+    var ct = new Transport(cfg)
+
+    ct.transport = function(data) {
+        console.log(data.output)
+    }
+    return ct
+}
+
+exports.getFile = function(cfg) {
+    var ft = new Transport(cfg)
+
+    ft.transport = function(data) {
+        push2File(generateLog(data))
+    }
+    return ft
+}
 
 var logFile
 

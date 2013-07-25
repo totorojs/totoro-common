@@ -1,7 +1,7 @@
 var path = require('path')
 var fs = require('fs')
 
-var logger = require('./logger')
+var logger = require('./logger').getLog()
 
 exports.home = process.platform === 'win32' ? process.env.USERPROFILE : process.env.HOME
 
