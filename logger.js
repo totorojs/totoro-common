@@ -5,6 +5,7 @@ var path = require('path')
 var tracer = require('tracer')
 var colorful = require('colorful')
 var dateFormat = require('dateformat')
+var util = require('util')
 // Retrieve
 
 var levels = ['debug', 'info', 'warn', 'error', 'fatal']
@@ -17,7 +18,6 @@ var colors = {
         error: colorful.red,
         fatal: colorful.red
     }
-
 
 
 exports.getLog = function(cfg) {
@@ -72,9 +72,8 @@ exports.getLog = function(cfg) {
 exports.Transport = Transport
 
 
-function Transport(cfg) {
-    this.cfg = cfg
-    this.level = (cfg && cfg.getLevel && cfg.getLevel()) || this.getLevel()
+function Transport() {
+    this.level = this.getLevel() 
 }
 
 Transport.prototype = {
@@ -85,36 +84,44 @@ Transport.prototype = {
         }
     },
     transport: function(data) {
-        console.info('222')
     },
     getLevel: function() {
         return 'debug'
     }
 }
 
-exports.getConsole = function(cfg) {
-    cfg = cfg || {}
-    cfg.getLevel = cfg.getLevel || function() {
-        return this.level = (process.argv.some(function(arg) {
-            return arg === '--verbose'
-        }) ? 'debug' : 'warn')
-    }
-
-    var ct = new Transport(cfg)
-
-    ct.transport = function(data) {
-        console.log(data.output)
-    }
-    return ct
+function ConsoleTransport() {
+   Transport.call(this);
 }
 
-exports.getFile = function(cfg) {
-    var ft = new Transport(cfg)
+util.inherits(ConsoleTransport, Transport)
 
-    ft.transport = function(data) {
-        push2File(generateLog(data))
-    }
-    return ft
+ConsoleTransport.prototype.getLevel = function() {
+    return process.argv.some(function(arg) {
+        return arg === '--verbose'
+    }) ? 'debug' : 'info'
+}
+
+ConsoleTransport.prototype.transport = function(data) {
+    console.log(data.output)
+}
+
+exports.getConsole = function() {
+    return new ConsoleTransport()
+}
+
+function FileTransport() {
+   Transport.call(this);
+}
+
+util.inherits(FileTransport, Transport)
+
+FileTransport.prototype.transport = function(data) {
+    push2File(generateLog(data))
+}
+
+exports.getFileTransport = function(cfg) {
+    return new FileTransport()
 }
 
 var logFile
