@@ -73,13 +73,13 @@ exports.Transport = Transport
 
 
 function Transport() {
-    this.level = this.getLevel() 
+    this.level = this.getLevel()
 }
 
 Transport.prototype = {
     _transport: function(data) {
         var title =data.title
-        if (levels.indexOf(title) >= levels.indexOf(this.level || this.getLevel())) {
+        if (levels.indexOf(title) >= levels.indexOf(this.level)){
             this.transport(data)
         }
     },
