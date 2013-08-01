@@ -3,7 +3,9 @@ var fs = require('fs')
 
 var logger = require('./logger').getLog()
 
+
 exports.home = process.platform === 'win32' ? process.env.USERPROFILE : process.env.HOME
+
 
 exports.split = function(str) {
     return str ? str.split(',') : []
@@ -26,12 +28,6 @@ exports.getCfg = function(commander) {
     return cfg
 }
 
-function camelcase(flag) {
-    return flag.split('-').reduce(function(str, word){
-        return str + word[0].toUpperCase() + word.slice(1);
-    });
-}
-
 
 /**
  * read json config file
@@ -41,7 +37,36 @@ exports.readCfgFile = function(p) {
         return require(path.resolve(p))
     } catch(e) {
         logger.debug('Fail to read config file<' + p + '>')
+        return {}
     }
+}
+
+
+exports.writeCfgFile = function(p, cfg) {
+    var dir = path.dirname(p)
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir)
+    }
+    fs.writeFileSync(p, JSON.stringify(cfg))
+}
+
+
+function camelcase(str) {
+    return str.split('-').reduce(function(str, word){
+        return str + word[0].toUpperCase() + word.slice(1)
+    })
+}
+exports.camelcase = camelcase
+
+
+exports.unCamelcase = function(str) {
+    return str.split(/([A-Z])/).reduce(function(str, word) {
+        if (/[A-Z]/.test(word)) {
+            return str + '-' + word.toLowerCase()
+        } else {
+            return str + word
+        }
+    })
 }
 
 
@@ -129,5 +154,6 @@ exports.getExternalIpAddress = function() {
         return addresses[0].address
     }
 }
+
 
 exports.logger = require('./logger')
