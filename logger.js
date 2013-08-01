@@ -49,7 +49,7 @@ exports.getLog = function(cfg) {
 
         filters: [
             {
-                info: colorful.green,
+                info: colorful.white,
                 warn: colorful.yellow,
                 error: colorful.red,
                 fatal: [colorful.red, colorful.bold]
