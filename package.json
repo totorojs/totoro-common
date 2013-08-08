@@ -20,7 +20,12 @@
         "colorful": "2.1.0",
         "dateformat": "*"
     },
-    "devDependencies": {},
+    "devDependencies": {
+        "commander": "1.2.0",
+        "mocha": "1.12.0",
+        "expect.js": "0.2.0",
+        "sinon": "1.7.3"
+    },
     "repository": {
         "type": "git",
         "url": "git@github.com:totorojs/totoro-common.git"
