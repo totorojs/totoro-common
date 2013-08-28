@@ -15,10 +15,7 @@
         "node": ">= 0.8.17"
     },
     "dependencies": {
-        "underscore": "1.4.4",
-        "tracer": "0.5.1",
-        "colorful": "2.1.0",
-        "dateformat": "*"
+        "totoro-logger": "0.1.3"
     },
     "devDependencies": {
         "commander": "1.2.0",
