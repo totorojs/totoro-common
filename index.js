@@ -35,7 +35,7 @@ exports.getCfg = function(commander) {
  */
 exports.readCfgFile = function(p) {
     try {
-        return require(path.resolve(p))
+        return JSON.parse(fs.readFileSync(p))
     } catch(e) {
         logger.debug('Fail to read config file <' + p + '>')
         return {}
